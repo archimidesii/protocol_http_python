@@ -1,43 +1,43 @@
-# Uncomment this to pass the first stage
 import socket
-
-# GET /index.html HTTP/1.1
-# Host: localhost:4221
-# User-Agent: curl/7.64.1
+import threading
 
 def main():
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    # print("Logs from your program will appear here!")
-
-    # Uncomment this to pass the first stage
-    #
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
-    # server_socket.accept() # wait for client
-    client_socket, address_info = server_socket.accept()
+    while True:
+        client_socket, adress_info = server_socket.accept()  # wait for client
+        threading.Thread(
+            target=handleRequest, args=(client_socket, adress_info)
+        ).start()
 
+def handleRequest(client_socket, address_info):
     with client_socket:
         # status = "HTTP/1.1 200 OK\r\n\r\n"
         request = client_socket.recv(1024).decode("utf-8")
         request = request.split("\r\n")
-        # header_path = request.split("\r\n")[0].split(" ")[1]
-        path=request[0].split()[1].split("/")
-        # if len(path) == 2:
-        userAgent = request[2].split()[-1]
-        if path[1] == "":
-            response=f"HTTP/1.1 200 OK\r\n\r\n"
-            # status = "HTTP/1.1 200 OK\r\n\r\n"
-            # status = status.encode("utf-8")
-            # client_socket.send(status)
-        elif path[1] == "echo":
-             text = "/".join(path[2:])
-             response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(text)}\r\n\r\n{text}"
-        elif path[1] == "user-agent":
-            response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(userAgent)}\r\n\r\n{userAgent}"
-            
+        data_path = request[0].split()[1]
+        if data_path == "/":
+            status = "HTTP/1.1 200 OK\r\n\r\n"
+        elif data_path.startswith("/echo"):
+            random_string = data_path.split("/echo/")[1]
+            status = (
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: text/plain\r\n"
+                f"Content-Length: {len(random_string)}\r\n\r\n"
+                f"{random_string}"
+            )
+        elif data_path.startswith("/user-agent"):
+            user_agent_header = request[2]
+            user_agent_data = user_agent_header.split("User-Agent: ")[1]
+            status = (
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: text/plain\r\n"
+                f"Content-Length: {len(user_agent_data)}\r\n\r\n"
+                f"{user_agent_data}"
+            )
         else:
-            response = "HTTP/1.1 404 Not Found response\r\n\r\n"
+            status = "HTTP/1.1 404 Not Found\r\n\r\n"
             # status = status.encode("utf-8")
-        client_socket.send(response.encode("utf-8"))
+        client_socket.send(status.encode())
 
 
 if __name__ == "__main__":
