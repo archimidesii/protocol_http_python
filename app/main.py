@@ -13,12 +13,12 @@ def main():
     #
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     # server_socket.accept() # wait for client
-    client_socket, address = server_socket.accept()
+    client_socket, address_info = server_socket.accept()
 
     with client_socket:
         # status = "HTTP/1.1 200 OK\r\n\r\n"
         request = client_socket.recv(1024).decode("utf-8")
-        request = request[0].split()[1]
+        request = request.split("\r\n")
         # header_path = request.split("\r\n")[0].split(" ")[1]
         path=request[0].split()[1].split("/")
         if len(path) == 2:
