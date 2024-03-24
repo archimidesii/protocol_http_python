@@ -1,15 +1,20 @@
 import socket
+import os
+from argparse import ArgumentParser
 import threading
 
 def main():
+    parser = ArgumentParser()
+    parser.add_argument("--directory", type=str, default=None)
+    args = parser.parse_args()
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     while True:
         client_socket, adress_info = server_socket.accept()  # wait for client
         threading.Thread(
-            target=handleRequest, args=(client_socket, adress_info)
+            target=handleRequest, args=(client_socket, adress_info, args.directory)
         ).start()
 
-def handleRequest(client_socket, address_info):
+def handleRequest(client_socket, address_info,directory):
     with client_socket:
         # status = "HTTP/1.1 200 OK\r\n\r\n"
         request = client_socket.recv(1024).decode("utf-8")
@@ -34,6 +39,22 @@ def handleRequest(client_socket, address_info):
                 f"Content-Length: {len(user_agent_data)}\r\n\r\n"
                 f"{user_agent_data}"
             )
+        elif data_path.startswith("/files"):
+            if directory:
+                filename = data_path.split("/files/")[1]
+                file = os.path.join(directory, filename)
+                print(file)
+                if os.path.exists(file) and os.path.isfile(file):
+                    with open(file, "rb") as f:
+                        file_data = f.read()
+                    status = (
+                        "HTTP/1.1 200 OK\r\n"
+                        "Content-Type: application/octet-stream\r\n"
+                        f"Content-Length: {len(file_data)}\r\n\r\n"
+                        f"{file_data.decode()}"
+                    )
+                else:
+                    status = "HTTP/1.1 404 Not Found\r\n\r\n"
         else:
             status = "HTTP/1.1 404 Not Found\r\n\r\n"
             # status = status.encode("utf-8")
