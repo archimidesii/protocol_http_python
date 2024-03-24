@@ -35,9 +35,9 @@ def main():
             response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(userAgent)}\r\n\r\n{userAgent}"
             
         else:
-            status = "HTTP/1.1 404 Not Found response\r\n\r\n"
-            status = status.encode("utf-8")
-            client_socket.send(status)
+            response = "HTTP/1.1 404 Not Found response\r\n\r\n"
+            # status = status.encode("utf-8")
+        client_socket.send(response.encode("utf-8"))
 
 
 if __name__ == "__main__":
