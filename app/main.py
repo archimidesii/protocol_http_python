@@ -16,16 +16,23 @@ def main():
     client_socket, address = server_socket.accept()
 
     with client_socket:
-        status = "HTTP/1.1 200 OK\r\n\r\n"
-        request = client_socket.recv(1024)
-        request = request.decode("utf-8")
-        header_path = request.split("\r\n")[0].split(" ")[1]
-        if header_path == "/":
+        # status = "HTTP/1.1 200 OK\r\n\r\n"
+        request = client_socket.recv(1024).decode("utf-8")
+        request = request[0].split()[1]
+        # header_path = request.split("\r\n")[0].split(" ")[1]
+        path=request[0].split()[1].split("/")
+        if len(path) == 2:
             status = "HTTP/1.1 200 OK\r\n\r\n"
+            status = status.encode("utf-8")
+            client_socket.send(status)
+        elif path[1] == "echo":
+            text = "/".join(path[2:])
+            reponse = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(text)}\r\n\r\n{text}"
+            client_socket.send(reponse.encode("utf-8"))
         else:
             status = "HTTP/1.1 404 Not Found\r\n\r\n"
-        status = status.encode("utf-8")
-        client_socket.send(status)
+            status = status.encode("utf-8")
+            client_socket.send(status)
 
 
 if __name__ == "__main__":
