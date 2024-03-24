@@ -21,16 +21,21 @@ def main():
         request = request.split("\r\n")
         # header_path = request.split("\r\n")[0].split(" ")[1]
         path=request[0].split()[1].split("/")
-        if len(path) == 2:
-            status = "HTTP/1.1 200 OK\r\n\r\n"
-            status = status.encode("utf-8")
-            client_socket.send(status)
+        # if len(path) == 2:
+        userAgent = request[2].split()[-1]
+        if path[1] == "":
+            response=f"HTTP/1.1 200 OK\r\n\r\n"
+            # status = "HTTP/1.1 200 OK\r\n\r\n"
+            # status = status.encode("utf-8")
+            # client_socket.send(status)
         elif path[1] == "echo":
-            text = "/".join(path[2:])
-            reponse = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(text)}\r\n\r\n{text}"
-            client_socket.send(reponse.encode("utf-8"))
+             text = "/".join(path[2:])
+             response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(text)}\r\n\r\n{text}"
+        elif path[1] == "user-agent":
+            response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(userAgent)}\r\n\r\n{userAgent}"
+            
         else:
-            status = "HTTP/1.1 404 Not Found\r\n\r\n"
+            status = "HTTP/1.1 404 Not Found response\r\n\r\n"
             status = status.encode("utf-8")
             client_socket.send(status)
 
