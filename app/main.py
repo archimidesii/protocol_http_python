@@ -19,6 +19,7 @@ def handleRequest(client_socket, address_info,directory):
         # status = "HTTP/1.1 200 OK\r\n\r\n"
         request = client_socket.recv(1024).decode("utf-8")
         request = request.split("\r\n")
+        method = request[0].split()[0]
         data_path = request[0].split()[1]
         if data_path == "/":
             status = "HTTP/1.1 200 OK\r\n\r\n"
@@ -43,18 +44,25 @@ def handleRequest(client_socket, address_info,directory):
             if directory:
                 filename = data_path.split("/files/")[1]
                 file = os.path.join(directory, filename)
-                print(file)
-                if os.path.exists(file) and os.path.isfile(file):
-                    with open(file, "rb") as f:
-                        file_data = f.read()
-                    status = (
-                        "HTTP/1.1 200 OK\r\n"
-                        "Content-Type: application/octet-stream\r\n"
-                        f"Content-Length: {len(file_data)}\r\n\r\n"
-                        f"{file_data.decode()}"
-                    )
-                else:
-                    status = "HTTP/1.1 404 Not Found\r\n\r\n"
+                if method == "GET":
+                    if os.path.exists(file) and os.path.isfile(file):
+                        with open(file, "rb") as f:
+                            file_data = f.read()
+                        status = (
+                            "HTTP/1.1 200 OK\r\n"
+                            "Content-Type: application/octet-stream\r\n"
+                            f"Content-Length: {len(file_data)}\r\n\r\n"
+                            f"{file_data.decode()}"
+                        )
+                    else:
+                        status = "HTTP/1.1 404 Not Found\r\n\r\n"
+                elif method == "POST":
+                    file_data = request[-1]
+                    if not os.path.exists(directory):
+                        os.makedirs(directory)
+                    with open(file, "wb") as f:
+                        f.write(file_data.encode())
+                    status = "HTTP/1.1 201 OK\r\n\r\n"
         else:
             status = "HTTP/1.1 404 Not Found\r\n\r\n"
             # status = status.encode("utf-8")
